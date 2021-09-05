@@ -3,14 +3,14 @@
 This project is mainly target for user authentication and authorization with Auth0 and RBAC flow. UI is writtern by angular and This is include following functinality:
 
 - Barista Role
-    Can see the menu of coffee
-    Can see the detail of coffee 
+    -Can see the menu of coffee
+    -Can see the detail of coffee 
     
 - Manager Role
-    Can create the new coffee type
-    Can edit the coffee
-    Can delete the coffee
-    Can see the coffee menu
+    -Can create the new coffee type
+    -Can edit the coffee
+    -Can delete the coffee
+    -Can see the coffee menu
     
     
 
