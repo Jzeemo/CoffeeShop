@@ -1,0 +1,9 @@
+{
+    "DOMAIN": "lwincoffeeshop.us.auth0.com",
+    "API_IDENTIFIER": "coffeeshop",
+    "CLIENT_ID": "0tv0LeprA9cw6AZAbPTEN1emoBTTivYA",
+    "CALLBACK_URI": "https://localhost:8100",
+    "ALGORITHMS": [
+        "RS256"
+    ]
+}
