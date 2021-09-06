@@ -1,14 +1,14 @@
 import json
-from flask import request, _request_ctx_stack, abort
-from functools import wraps
-from flask.json import jsonify
-from jose import jwt
-from urllib.request import urlopen
-from icecream import ic
 import os
+from functools import wraps
+from urllib.request import urlopen
 
+from flask import _request_ctx_stack, abort, request
+from flask.json import jsonify
+from icecream import ic
+from jose import jwt
+from sqlalchemy.sql.expression import true
 
-## AuthError Exception
 """
 AuthError Exception
 A standardized way to communicate auth failure modes
@@ -20,10 +20,7 @@ class AuthError(Exception):
         self.status_code = status_code
 
 
-## Auth Header
-
 """
-STATUS: DONE
 @TODO: implement get_token_auth_header() method
     it should attempt to get the header from the request
         it should raise an AuthError if no header is present
@@ -32,20 +29,32 @@ STATUS: DONE
     return the token part of the header
 """
 
+#get the jwt token from header
 def get_token_auth_header():
+
+    #check the Authorization include in request header
     if "Authorization" not in request.headers:
         raise AuthError(
             {"code": "not_found", "description": "Bearer Token Not Found"}, 401
         )
+
+    #get the Authorization string
     authString = request.headers["Authorization"]
+
+    #split the the Authorization string by space
     parts = authString.split(" ")
+
+    #check Authorization header is correct format or not
     if parts[0] != "Bearer" or len(parts) != 2:
         raise AuthError(
             {"code": "invalid_token", "description": "Invalid Bearer Token"},
             401,
         )
 
+    
     jwtToken = parts[1]
+
+    #validate the jwt token format
     components = jwtToken.split(".")
     if len(components) != 3:
         raise AuthError(
@@ -57,7 +66,6 @@ def get_token_auth_header():
 
 
 """
-STATUS: DONE
 @TODO: implement check_permissions(permission, payload) method
     @INPUTS
         permission: string permission (i.e. 'post:drink')
@@ -69,8 +77,10 @@ STATUS: DONE
     return true otherwise
 """
 
-
+#This is gonna be python decorator method for checking the permission
 def check_permissions(permission, payload):
+
+    #check the payload string whether permission keyword is include or not
     if "permissions" not in payload:
         raise AuthError(
             {
@@ -79,18 +89,17 @@ def check_permissions(permission, payload):
             },
             400,
         )
-    if permission == "":
-        return True
-    if permission in payload["permissions"]:
-        return True
-    raise AuthError(
+    
+    if permission not in payload["permissions"]:
+        raise AuthError(
         {"code": "unauthorized", "description": "Permission not granted"},
         403,
     )
 
+    return True   
+
 
 """
-STATUS: DONE
 @TODO: implement verify_decode_jwt(token) method
     @INPUTS
         token: a json web token (string)
@@ -104,36 +113,30 @@ STATUS: DONE
     !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
 """
 
-
+#this method to decode the jwt and return payload
 def verify_decode_jwt(token):
 
+    #return the config value
     def load_config(file_path):
         with open(file_path, "r") as f:
             return json.load(f)
 
+    #get the config value
     config = load_config("../config.json")    
     
+    #get the public key
     jsonurl = urlopen(
         "https://{}/.well-known/jwks.json".format(config["DOMAIN"])
     )
     
-    jwks = json.loads(jsonurl.read())
-    
-    unverified_header = jwt.get_unverified_header(token)    
+    #get the public key structure
+    publickey_list = json.loads(jsonurl.read())
 
     rsa_key = {}
-    if "kid" not in unverified_header:
-        raise AuthError(
-            {
-                "code": "invalid_header",
-                "description": "Unable to parse authentication token",
-            },
-            400,
-        )
 
-    for key in jwks["keys"]:        
-
-        if key["kid"] == unverified_header["kid"]:
+    for key in publickey_list["keys"]:        
+        #get the kid value from public key
+        if key["kid"] == jwt.get_unverified_header(token)["kid"]:
             rsa_key = {
                 "kty": key["kty"],
                 "kid": key["kid"],
@@ -144,8 +147,8 @@ def verify_decode_jwt(token):
             break
     
     if rsa_key:
-        try:                     
-            
+        try:                    
+            #decode the jwt and return the payload
             payload = jwt.decode(
                 token,
                 rsa_key,

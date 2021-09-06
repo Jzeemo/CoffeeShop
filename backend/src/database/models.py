@@ -1,8 +1,9 @@
-import os
-from sqlalchemy import Column, String, Integer
-from flask_sqlalchemy import SQLAlchemy
 import json
+import os
+
+from flask_sqlalchemy import SQLAlchemy
 from icecream import ic
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.sql.sqltypes import BLOB
 
 database_filename = "database.db"
